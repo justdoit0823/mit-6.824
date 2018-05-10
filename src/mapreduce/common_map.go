@@ -74,7 +74,6 @@ func doMap(
 
 	for j := 0; j < nReduce; j++ {
 		intermediateFile := reduceName(jobName, mapTask, j)
-		fmt.Println(intermediateFile)
 		intermediateWriter, err := os.Create(intermediateFile)
 		if err != nil {
 			fmt.Println(err)
@@ -89,6 +88,7 @@ func doMap(
 		intermediateWriter.Close()
 	}
 }
+
 
 func ihash(s string) int {
 	h := fnv.New32a()
