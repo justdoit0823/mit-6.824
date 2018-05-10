@@ -49,4 +49,4 @@ type ByKey []KeyValue
 
 func (k ByKey) Len() int {return len(k)}
 func (k ByKey) Swap(i, j int) {k[i], k[j] = k[j], k[i]}
-func (k ByKey) Less(i, j int) bool {return k[i].Key < k[i].Key}
+func (k ByKey) Less(i, j int) bool {return k[i].Key < k[j].Key}
