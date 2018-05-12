@@ -3,6 +3,7 @@ package mapreduce
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
 //
@@ -37,6 +38,7 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 	var wg sync.WaitGroup
 
 	addrCh := make(chan string)
+	taskCh := make(chan int, ntasks)
 
 	go func() {
 		for {
@@ -45,26 +47,51 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 		}
 	}()
 
+	for i := 0; i < ntasks; i++ {
+		taskCh <- i
+	}
+
+	n := int32(ntasks)
+
 	switch phase {
 	case mapPhase:
-		for i := 0; i < ntasks; i++ {
+		for i := range taskCh {
 			addr := <- addrCh
 
 			wg.Add(1)
 			go func(addr string, i int) {
-				call(addr, "Worker.DoTask", DoTaskArgs{jobName, mapFiles[i], phase, i, n_other}, nil)
+				ok := call(addr, "Worker.DoTask", DoTaskArgs{jobName, mapFiles[i], phase, i, n_other}, nil)
 				wg.Done()
+
+				if !ok {
+					taskCh <- i
+				} else {
+					if atomic.AddInt32(&n, -1) == 0 {
+						close(taskCh)
+					}
+				}
+
 				addrCh <- addr
+
 			}(addr, i)
 		}
 	case reducePhase:
-		for i := 0; i < ntasks; i++ {
+		for i := range taskCh {
 			addr := <- addrCh
 
 			wg.Add(1)
 			go func(addr string, i int) {
-				call(addr, "Worker.DoTask", DoTaskArgs{jobName, "", phase, i, n_other}, nil)
+				ok := call(addr, "Worker.DoTask", DoTaskArgs{jobName, "", phase, i, n_other}, nil)
 				wg.Done()
+
+				if !ok {
+					taskCh <- i
+				} else {
+					if atomic.AddInt32(&n, -1) == 0 {
+						close(taskCh)
+					}
+				}
+
 				addrCh <- addr
 			}(addr, i)
 		}
