@@ -60,7 +60,7 @@ func doMap(
 
 	contents, err := ioutil.ReadFile(inFile)
 	if err != nil {
-		fmt.Println("Read file %s failed when maping.\n", inFile)
+		fmt.Printf("Read file %s failed when maping.\n", inFile)
 		return
 	}
 

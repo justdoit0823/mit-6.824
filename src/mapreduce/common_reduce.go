@@ -99,7 +99,7 @@ func doReduce(
 
 	outputWriter, err := os.OpenFile(outFile, os.O_RDWR | os.O_CREATE, 0755)
 	if err != nil {
-		fmt.Printf("Open file %s failed.\n", outFile, err)
+		fmt.Printf("Open file %s failed %s.\n", outFile, err)
 		return
 	}
 	defer outputWriter.Close()
